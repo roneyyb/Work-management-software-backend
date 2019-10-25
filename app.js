@@ -9,6 +9,6 @@ app.use(express.json());
 app.use(User);
 app.use(Task);
 app.use(Work);
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 
 app.listen(port, console.log(`Server started on ${port}`));
