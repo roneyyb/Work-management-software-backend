@@ -1,10 +1,8 @@
 const express = require('express');
 const checkid = require('../middleware/checkid');
 const Work = require('../database/worklistmodel');
-const workcheck = require('../middleware/workcheck');
 const accountcheck = require('../middleware/accountcheck');
 const Defaultid = require('../database/defaultworkmodelid');
-
 const workexist = require('../middleware/workexist');
 const router = new express.Router();
 
