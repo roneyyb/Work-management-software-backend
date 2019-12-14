@@ -3,9 +3,78 @@ const Task = require('../database/taskmodel');
 const checkworkid = require('../middleware/checkworkid');
 const workcheck = require('../middleware/workcheck');
 const router = new express.Router();
+const accountcheck = require('../middleware/accountcheck');
+const checkid = require('../middleware/checkid');
+
+router.delete('/multitaskdelete',accountcheck, async (req, res) => {
+  try{
+    console.log('task to delete in database',req.body.deletetasklist);
+    await req.body.deletetasklist.every(async tasks => {
+      const task = await Task.findOne({
+        _id: tasks.taskid,
+        workid_backend: tasks.workid
+      });
+      if(task) {
+      await task.remove();
+      }
+      return true;
+    });
+    res.send({ message: 'task successfully deleted',error:'' });
+  } catch(error) {
+    res.status(404).send({error:error});
+  }
+});
+
+router.post('/multitaskcreate/:id',checkid,async (req, res) => {
+  try
+  {
+    var array = [];
+    console.log(req.body.tasklist);
+  await req.body.tasklist.every((tasks) => {
+    const task = new Task({...tasks});
+    console.log(task);
+      task.save();
+      array.push({taskid: task.taskid, taskid_backend: task._id});
+    return true;
+  });
+  
+  console.log('array send to frontend =>',array);
+  res.status(201).send({taskidbackend:array,error:''});
+  }
+  catch(error) {
+    res.status(200).send({error:error});
+    console.log(error);
+  }
+});
+router.patch('/multitaskupdate', accountcheck, async (req,res) => {
+  try {
+    //console.log(req);
+    await req.body.tasklist.every( async(tasks) => {
+      const { update_type,task_pehchan,...rest } = tasks;
+      const task = { ...rest };
+      console.log(task);
+      await Task.updateOne({ workid_backend: task.workid_backend, _id: tasks.taskid_backend},{
+        ...task
+      },(error, response) => {
+        if (response) {
+          console.log('response =>', response);
+        }
+        if (error) {
+          console.log('error =>', error);
+        }
+      });
+      return true;
+    });
+    res.status(201).send({'message':'work updated',error:''});
+  }catch(error) {
+    res.status(400).send({error:error});
+    console.log(error);
+  }
+});
+
 
 router.post('/taskcreate/:id', checkworkid, async (req, res) => {
-  const task = new Task({ ...req.body, owner: req.params.id });
+  const task = new Task({ ...req.body, workid: req.params.id });
   console.log('task', req.body);
   try {
     await task.save();
@@ -49,7 +118,7 @@ router.get('/taskget', workcheck, async (req, res) => {
       .execPopulate();
     //console.log('mytask', req.work.mytask);
     // const datas = await Task.find({
-    //   owner: req.work._id,
+    //   workid: req.work._id,
     //   completed: req.query.completed
     // });
     // console.log('datas =>', datas);
@@ -62,6 +131,7 @@ router.get('/taskget', workcheck, async (req, res) => {
   }
 });
 
+
 router.patch('/taskupdate/:id', workcheck, async (req, res) => {
   const allowedUpdate = ['title', 'description', 'completed'];
   console.log(req.body);
@@ -71,7 +141,7 @@ router.patch('/taskupdate/:id', workcheck, async (req, res) => {
   try {
     const task = await Task.findOne({
       _id: req.params.id,
-      owner: req.work._id
+      workid: req.work._id
     });
     if (!task) {
       return res.status(404).send({ error: 'Task Not found' });
@@ -95,7 +165,7 @@ router.delete('/taskdelete/:id', workcheck, async (req, res) => {
     console.log('id', req.params.id);
     const task = await Task.findOne({
       _id: req.params.id,
-      owner: req.work._id
+      workid: req.work._id
     });
     if (!task) {
       return res.status(404).send({ error: 'task not found' });
@@ -110,7 +180,7 @@ router.delete('/taskdelete/:id', workcheck, async (req, res) => {
 router.patch('/multitaskupdate', workcheck, async (req, res) => {
   try {
     const updatedid = req.header('updateids').split(',');
-    Task.updateMany({ owner: req.work._id, _id: { $in: updatedid } }, { completed: true }, (error, response) => {
+    Task.updateMany({ workid: req.work._id, _id: { $in: updatedid } }, { completed: true }, (error, response) => {
       if (response) {
       console.log('response =>', response);
       }
@@ -134,7 +204,7 @@ router.delete('/multitaskdelete', workcheck, async (req, res) => {
   const deletedid = req.header('deletedids').split(',');
   console.log(req.work._id,deletedid);
   //without the fucntion in multidelete it wont work properly
-  Task.deleteMany({owner: req.work._id, _id: { $in: deletedid }}, (error,response) => {
+  Task.deleteMany({workid: req.work._id, _id: { $in: deletedid }}, (error,response) => {
     console.log('response =>',response);
    });
     res.status(200).send({ message: 'tasks deleted!' });

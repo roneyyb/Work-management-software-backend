@@ -3,42 +3,62 @@ const mongoose = require('mongoose');
 
 const taskSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      trim: true
-    },
-    description: {
-      type: String,
-      trim: true
-    },
-    owner: {
+    workid_backend: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'Work'
+    }, 
+    taskid: {
+      type: String,
+      unique: true,
+      required: true
     },
-    completed: {
-      type: Boolean,
+    task_title: {
+      type: String,
+      trim: true
+    },
+    task_description: {
+      type: String,
+      trim: true
+    },
+    task_deadline: {
+      type: String,
+    },
+    task_reminder:{
+      type: String
+    },
+    task_notificationid: {
+      type: Number
+    },
+    task_completed: {
+      type: Number
+    },
+    workid: {
+      type: String,
+      required: true,
+    },
+    task_completedAt: {
+      type: String,
       default: false
     },
-    date: {
-      type: Date,
-      trim: true
+    task_createdAt: {
+      type: String
+    },
+    task_updatedAt: {
+      type: String
     }
-  },
-  {
-    timestamps: true
   }
 );
 
 taskSchema.statics.returndata = async (workid, completed) => {
   const task = await Task.findOne({
-    owner: workid
+    workid: workid
   });
   if (!task) {
     throw new Error('no task found with this workid');
   }
   console.log('return data', workid, completed);
-  const data = Task.find({ owner: workid, completed });
+  const data = Task.find({ workid: workid, completed });
   console.log('data', data);
   return data;
 };

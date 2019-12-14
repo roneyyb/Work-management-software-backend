@@ -3,24 +3,31 @@ const Task = require('./taskmodel');
 
 const workSchema = mongoose.Schema(
   {
-    work: {
+    workid: {
       type: String,
+      unique: true,
       trim: true,
       require: true
     },
-    owners: {
+    work_title: {
+      type: String,
+      trim: true
+    },
+    work_selected: {
+      type: Number,
+      default: 0
+    },
+    work_created: {
+      type: String
+    },
+    work_deadline: {
+      type: String
+    },
+    userid: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'User'
-    },
-    Selected: {
-      type: Boolean,
-      default: false
-      //require: true
-    }
-  },
-  {
-    timestamps: true
+    }, 
   }
 );
 
@@ -32,21 +39,21 @@ workSchema.virtual('mytask', {
 
 workSchema.statics.selecthim = async (userid, workid) => {
   const work = await Work.findOne({
-    owners: userid,
+    userid: userid,
     _id: workid
   });
   if (!work) {
     throw new Error('no work found to update');
   }
-  var a = await Work.updateMany({ owners: userid }, { Selected: false });
-  a = await Work.updateOne({ owners: userid, _id: workid }, { Selected: true });
-  const datalist = Work.find({ owners: userid });
+  var a = await Work.updateMany({ userid: userid }, { Selected: false });
+  a = await Work.updateOne({ userid: userid, _id: workid }, { Selected: true });
+  const datalist = Work.find({ userid: userid });
   return datalist;
 };
 
 workSchema.pre('remove', async function(next) {
   const work = this;
-   await Task.deleteMany({owner: work._id });
+   await Task.deleteMany({workid_backend: work._id });
    next();
 });
 

@@ -8,7 +8,7 @@ const defaultidSchema = new mongoose.Schema(
             ref: 'Work'
         },
         workid: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: String,
             required: true,
             ref: 'User'
         }

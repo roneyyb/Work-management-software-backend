@@ -7,7 +7,7 @@ const workexist = require('../middleware/workexist');
 const router = new express.Router();
 
 router.post('/creatework/:id', checkid, async (req, res) => {
-  const work = new Work({ ...req.body, owners: req.params.id });
+  const work = new Work({ ...req.body, userid: req.params.id });
   console.log('new work', req.body, work);
   try {
     console.log('i');
@@ -19,6 +19,71 @@ router.post('/creatework/:id', checkid, async (req, res) => {
   } catch (e) {
     console.log('e =>', e);
     res.status(400).send({ error: e });
+  }
+});
+
+router.post('/multiworkcreate/:id', checkid, async (req, res) => {
+  try {
+    console.log('multi work save',req.body);
+     var a= [];
+  await req.body.worklist.every(works => {
+    const { update_type,workid_backend, ...rest } = works;
+   
+    const work = new Work({ ...rest, userid: req.params.id });
+    console.log(work);
+    work.save();
+    a.push({workid_backend: work._id, workid: work.workid});
+    return true;
+  });
+  console.log('all work saved',a);
+  res.status(200).send({workidbackend:a,error:''});
+} catch(error) {
+res.status(404).send({error});
+  console.log('multiwork create error => ',error);
+}
+});
+
+router.patch('/multiworkupdate', accountcheck, async (req,res) => {
+  try {
+    //console.log(req);
+    console.log('----request to update work data in database---');
+    await req.body.worklist.every(async(works) => {
+      const { update_type, userid, workid_backend,...rest } = works;
+      const work = { ...rest };
+      console.log(work);
+      await Work.updateOne({ userid: req.user._id, _id: works.workid_backend },{
+        ...work
+      },(error, response) => {
+        if (response) {
+          console.log('response =>', response);
+        }
+        if (error) {
+          console.log('error =>', error);
+        }
+      });
+      return true;
+    });
+    res.status(201).send({'message':'work updated','error':''});
+  }catch(error) {
+    console.log(error);
+    res.status(400).send({error:error});
+  }
+});
+
+router.delete('/multiworkdelete',accountcheck, async (req,res)=> {
+  try{
+    console.log('delete work =>',req.body.deleteworklist);
+    await req.body.deleteworklist.every(async work => {
+    const works = await Work.findOne({userid:req.user._id, _id: work.workid});
+    console.log(works);
+    if(works){
+    works.remove();
+    }
+    });
+    res.status(200).send({message:'All work deleted', error: ''});
+  } catch(error) {
+    console.log(error);
+    res.status(400).send({error:error});
   }
 });
 
@@ -97,7 +162,7 @@ router.patch('/workupdate/:id', accountcheck, async (req, res) => {
     console.log('req.user+>', req.user);
     await Work.updateOne(
       {
-        owners: req.user._id,
+        userid: req.user._id,
         _id: req.params.id
       },
       { work: req.body.work },
@@ -118,7 +183,7 @@ router.patch('/workupdate/:id', accountcheck, async (req, res) => {
     console.log('work returned =>', req.user.mywork);
 
     const work = await Work.findOne({
-      owners: req.user._id,
+      userid: req.user._id,
       _id: req.params.id,
       Selected: true
     });

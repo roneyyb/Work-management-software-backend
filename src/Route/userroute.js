@@ -14,8 +14,8 @@ router.post('/login', async (req, res) => {
     );
     console.log('Credentials successfuly found and user details are =>', user);
     
-    const defaultwork = await Work.findOne({ Selected: true, owners: user.id });
-    //const any = await Work.findOne({owners: user.id, Selected: false });
+    const defaultwork = await Work.findOne({ Selected: true, userid: user.id });
+    //const any = await Work.findOne({userid: user.id, Selected: false });
     //console.log('any',any);
     const defaultid = await Defaultid.findOne({ userid: user.id });
     console.log('defaultwork', defaultwork, defaultid);
@@ -35,12 +35,15 @@ router.post('/login', async (req, res) => {
 router.post('/signup', auth, async (req, res) => {
   const user = new User(req.body);
   try {
-    console.log('some one tried to fetch');
+    console.log('some one tried to fetch',req);
     await user.save();
     const work = await new Work({
-      work: 'My Work',
-      owners: user._id,
-      Selected: true
+      work_title: 'My Work',
+      userid: user._id,
+      work_selected: 1,
+      work_created: req.header('date'),
+      work_deadline: '',
+      workid: req.header('defaultworkid')
     });
     await work.save();
 
@@ -49,6 +52,7 @@ router.post('/signup', auth, async (req, res) => {
       workid: work._id
     });
     await defaultid.save();
+    console.log(defaultid);
     console.log(user);
     console.log('new created work =>', work);
     return res.status(201).send({ user, work });
