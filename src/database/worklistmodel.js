@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Task = require('./taskmodel');
 
-const workSchema = mongoose.Schema(
+const workSchema = new mongoose.Schema(
   {
     workid: {
       type: String,
@@ -34,7 +34,7 @@ const workSchema = mongoose.Schema(
 workSchema.virtual('mytask', {
   ref: 'Task',
   localField: '_id',
-  foreignField: 'owner'
+  foreignField: 'workid_backend'
 });
 
 workSchema.statics.selecthim = async (userid, workid) => {

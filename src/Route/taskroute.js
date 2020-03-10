@@ -72,7 +72,40 @@ router.patch('/multitaskupdate', accountcheck, async (req,res) => {
   }
 });
 
-
+router.get('/alltaskget',accountcheck, async (req,res) => {
+  try {
+      await req.user
+        .populate({
+          path: 'mywork'
+        })
+      .execPopulate();
+      console.log('work returned =>', req.user.mywork);
+      var tasklist = [];
+      var len = req.user.mywork.length;
+      var count = 0;
+      await req.user.mywork.forEach(async work => {
+          try {await work
+        .populate({
+          path: 'mytask'
+          })
+        .execPopulate();
+        console.log(work.mytask);
+         tasklist.push(...work.mytask);
+          } catch(error) {
+            console.log(error);
+          }
+          if(++count === len)
+          {
+            console.log(tasklist);
+            res.status(200).send({tasklist:tasklist});
+          }
+      });
+      console.log('pehle chal gaya');
+      
+  } catch(error) {
+    res.status(400).send({error});
+  }
+});
 router.post('/taskcreate/:id', checkworkid, async (req, res) => {
   const task = new Task({ ...req.body, workid: req.params.id });
   console.log('task', req.body);

@@ -148,9 +148,9 @@ router.get('/worklistget', accountcheck, async (req, res) => {
       .populate({
         path: 'mywork'
       })
-      .execPopulate();
+    .execPopulate();
     console.log('work returned =>', req.user.mywork);
-    res.status(200).send({ message: req.user.mywork });
+    res.status(200).send({ worklist: req.user.mywork });
   } catch (e) {
     res.status(404).send({ error: e });
   }

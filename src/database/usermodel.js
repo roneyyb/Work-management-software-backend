@@ -22,8 +22,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true
-      //unique: true
-      //lowercase: true
     },
     password: {
       type: String,
@@ -54,7 +52,7 @@ userSchema.methods.toJSON = function() {
 userSchema.virtual('mywork', {
   ref: 'Work',
   localField: '_id',
-  foreignField: 'owners'
+  foreignField: 'userid'
 });
 userSchema.statics.findByCredentials = async (email, password, id) => {
   const user = await User.findOne({ email });
