@@ -1,10 +1,13 @@
 const express = require('express');
+require("dotenv").config();
+
 require('./src/database/mongoose');
+
 const User = require('./src/Route/userroute');
 const Task = require('./src/Route/taskroute');
 const Work = require('./src/Route/workroute');
-const app = express();
 
+const app = express();
 app.use(express.json());
 app.use(User);
 app.use(Task);
